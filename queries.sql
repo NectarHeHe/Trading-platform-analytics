@@ -7,14 +7,18 @@ from customers;
 
 
 select 
-concat(e.first_name, ' ', e.last_name) as employees,
-count(sales_person_id) as operations,
-sum(quantity) as income
-from sales s 
-right join employees e 
-on s.sales_person_id = e.employee_id
-group by employees
-order by income desc nulls last 
+	concat(e.first_name, ' ', e.last_name) as employees,
+	count(sales_person_id) as operations,
+	sum(quantity) as income
+from 
+	sales s 
+right join 
+	employees e 
+		on s.sales_person_id = e.employee_id
+group by 
+	employees
+order by 
+	income desc nulls last 
 limit 10;
 
 /* Запрос обращается к основной таблице продаж
@@ -29,7 +33,7 @@ limit 10;
 
 with tab as (select 
 	concat(e.first_name, ' ', e.last_name) as employees,
-	coalesce (round(avg(quantity), 0),0) as average_income
+	coalesce (trunc(avg(quantity), 0),0) as average_income
 from 
 	sales s 
 right join 
@@ -92,6 +96,10 @@ order by
  * чтобы выставить по порядку значения дней недели
  * сортируемся по дню продажи и по сотрудникам
  */
+
+
+
+
 
 
 	
