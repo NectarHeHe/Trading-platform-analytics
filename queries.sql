@@ -7,7 +7,7 @@ from customers;
 
 
 select 
-	concat(e.first_name, ' ', e.last_name) as employees,
+	concat(e.first_name, ' ', e.last_name) as name,
 	count(sales_person_id) as operations,
 	trunc(sum(quantity * p.price),0) as income
 from 
@@ -19,7 +19,7 @@ join
 	products p 
 		on p.product_id = s.product_id 
 group by 
-	employees
+	concat(e.first_name, ' ', e.last_name)
 order by 
 	income desc nulls last 
 limit 10;
@@ -34,8 +34,8 @@ limit 10;
  */
 
 with tab as (select 
-	concat(e.first_name, ' ', e.last_name) as employees,
-	coalesce (trunc(avg(quantity * price), 0),0) as average_income
+	concat(e.first_name, ' ', e.last_name) as name,
+	round(avg(quantity * price), 0) as average_income
 from 
 	sales s 
 right join 
@@ -45,16 +45,16 @@ left join
 	products p
 	on p.product_id = s.product_id 
 group by 
-	employees
+	concat(e.first_name, ' ', e.last_name)
 order by 
 	average_income)
 select  
-	employees, 
+	name, 
 	average_income
 from 
 	tab 
 group by 
-	employees, 
+	name, 
 	average_income
 having 
 	average_income < (select SUM(average_income) / 23 from tab)
@@ -67,39 +67,35 @@ order by
  * к которой присоединяется таблица продавцов и таблица продуктов
  * в задании нужно вывести продавцов, сумма выручки за одну продажу которых ниже средней
  * для этого мы выводим сконкатенированные имя и фамилию работника, и округленные средние значение дохода за продажу
- * так же обрабатываю NULL, чтобы человек который не продавал и ничего не заработал, так же был в конечной таблице
- * Right join так же нужен был для того, чтобы получить продавца не совершившего ни одной сделки
  * группируем по сотрудником для избежания повторений и получения неверных данных
  * оборачиваем запрос в конструкцию with для получения данных по среднему чеку всех сотрудников
  * добавляем конструкцию having и сравниваем среднюю выручку за продажу продавца со средней выручкой за продажу всех продавцов
  */
 
 select 
-	concat(e.first_name, ' ', e.last_name) as employees, 
-	coalesce (to_char(sale_date,'Day'),'no data') as weekday,
-	coalesce (trunc(sum(quantity * price),0),0) as income
+	concat(e.first_name, ' ', e.last_name) as name, 
+	to_char(sale_date,'Day') as weekday,
+	round(sum(quantity * price),0) as income
 from 
 	sales s 
-right join 
+join 
 	employees e 
 	on s.sales_person_id = e.employee_id
-left join 
+join 
 	products p
 	on p.product_id = s.product_id 
 group by 
-	employees, 
-	weekday,
-	sale_date 
+	concat(e.first_name, ' ', e.last_name), 
+	s.sale_date 
 order by 
 	sale_date, 
-	employees;
+	concat(e.first_name, ' ', e.last_name);
 
 /* 
  * Запрос обращается к основной таблице продаж
  * к которой присоединяется таблица продавцов
  * по заданию нужен отчет с данными по выручке по каждому продавцу и дню недели
  * для этого мы выводим сконкатенированные имя и фамилию работника, день недели и сумму его продаж в этот день недели
- * не забываем обработать значение работника, который сделал 0 продаж
  * группируемся для получения правильных значений без повторов и так же по дате продаж, 
  * чтобы выставить по порядку значения дней недели
  * сортируемся по дню продажи и по сотрудникам
