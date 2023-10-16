@@ -74,8 +74,9 @@ order by
 
 select 
 	concat(e.first_name, ' ', e.last_name) as name, 
-	to_char(sale_date,'Day') as weekday,
+	to_char(sale_date,'day') as weekday,
 	round(sum(quantity * price),0) as income
+	
 from 
 	sales s 
 join 
@@ -85,11 +86,12 @@ join
 	products p
 	on p.product_id = s.product_id 
 group by 
-	concat(e.first_name, ' ', e.last_name), 
-	s.sale_date 
+	concat(e.first_name, ' ', e.last_name),
+	weekday,
+	extract(isodow from sale_date)
 order by 
-	sale_date, 
-	concat(e.first_name, ' ', e.last_name);
+	extract(isodow from sale_date),
+	name
 
 /* 
  * Запрос обращается к основной таблице продаж
